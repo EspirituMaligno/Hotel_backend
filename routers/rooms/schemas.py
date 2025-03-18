@@ -11,7 +11,12 @@ class GetListRoomsSchema(BaseModel):
     price_to: float | None = None
     rating: int | None = None
     room_count: int | None = None
-    is_conditioning: bool | None = None
+    is_pc: bool | None = None
+    is_noisecancelling: bool | None = None
+    is_wifi: bool | None = None
+    is_breakfast: bool | None = None
+    is_biometry_key: bool | None = None
+    is_tv: bool | None = None
 
 
 class ReservationRoomSchema(BaseModel):

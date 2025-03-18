@@ -25,7 +25,12 @@ async def get_list_rooms(
         price_to=data.price_to,
         rating=data.rating,
         room_count=data.room_count,
-        is_conditioning=data.is_conditioning,
+        is_pc=data.is_pc,
+        is_wifi=data.is_wifi,
+        is_breakfast=data.is_breakfast,
+        is_biometry_key=data.is_biometry_key,
+        is_noisecancelling=data.is_noisecancelling,
+        is_tv=data.is_tv,
     )
 
 
@@ -87,7 +92,7 @@ async def get_reservations(
                     "price": room.price,
                     "room_count": room.room_count,
                     "description": room.description,
-                    "is_conditioning": room.is_conditioning,
+                    "is_pc": room.is_pc,
                     "rating": room.rating,
                 },
                 "start_date": r.start_date,

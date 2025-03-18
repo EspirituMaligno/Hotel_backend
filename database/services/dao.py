@@ -39,7 +39,12 @@ class RoomDAO(BaseDAO):
         price_to: float | None = None,
         rating: int | None = None,
         room_count: int | None = None,
-        is_conditioning: bool | None = None,
+        is_pc: bool | None = None,
+        is_noisecancelling: bool | None = None,
+        is_wifi: bool | None = None,
+        is_breakfast: bool | None = None,
+        is_biometry_key: bool | None = None,
+        is_tv: bool | None = None,
     ):
         # Подзапрос для поиска забронированных номеров
         subquery = (
@@ -70,8 +75,23 @@ class RoomDAO(BaseDAO):
         if room_count is not None:
             query = query.where(cls.model.room_count == room_count)
 
-        if is_conditioning is not None:
-            query = query.where(cls.model.is_conditioning == is_conditioning)
+        if is_pc is not None:
+            query = query.where(cls.model.is_pc == is_pc)
+
+        if is_noisecancelling is not None:
+            query = query.where(cls.model.is_noisecancelling == is_noisecancelling)
+
+        if is_wifi is not None:
+            query = query.where(cls.model.is_wifi == is_wifi)
+
+        if is_breakfast is not None:
+            query = query.where(cls.model.is_breakfast == is_breakfast)
+
+        if is_biometry_key is not None:
+            query = query.where(cls.model.is_biometry_key == is_biometry_key)
+
+        if is_tv is not None:
+            query = query.where(cls.model.is_tv == is_tv)
 
         # Применяем пагинацию
         if limit:

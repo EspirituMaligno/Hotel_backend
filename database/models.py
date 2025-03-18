@@ -33,7 +33,12 @@ class Rooms(Base):
     room_count: Mapped[int] = mapped_column(nullable=False)
     price: Mapped[float] = mapped_column(nullable=False)
     rating: Mapped[int] = mapped_column(nullable=True, default=0)
-    is_conditioning: Mapped[bool] = mapped_column(nullable=True)
+    is_noisecancelling: Mapped[bool] = mapped_column(nullable=True)
+    is_wifi: Mapped[bool] = mapped_column(nullable=True)
+    is_pc: Mapped[bool] = mapped_column(nullable=True)
+    is_breakfast: Mapped[bool] = mapped_column(nullable=True)
+    is_biometry_key: Mapped[bool] = mapped_column(nullable=True)
+    is_tv: Mapped[bool] = mapped_column(nullable=True)
 
 
 class Reservation(Base):
