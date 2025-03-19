@@ -31,6 +31,7 @@ class Rooms(Base):
     preview: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
     room_count: Mapped[int] = mapped_column(nullable=False)
+    count_of_people: Mapped[int] = mapped_column(nullable=True)
     price: Mapped[float] = mapped_column(nullable=False)
     rating: Mapped[int] = mapped_column(nullable=True, default=0)
     is_noisecancelling: Mapped[bool] = mapped_column(nullable=True)

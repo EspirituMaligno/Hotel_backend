@@ -1,7 +1,7 @@
 from zoneinfo import ZoneInfo
 from database.models import Users
 from database.services.dao import UserDAO
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from routers.auth.schemas import LoginSchema, RecoveryPasswordSchema, RegisterUserSchema
@@ -14,6 +14,7 @@ from routers.auth.utils import (
     hash_password,
     send_message_to_email,
 )
+from routers.auth.DTO import AuthResponseDTO, MessageResponseDTO
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -21,12 +22,19 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
 
 
-@router.post("/register", summary="Регистрация пользователя")
+@router.post(
+    "/register",
+    summary="Регистрация пользователя",
+    response_model=MessageResponseDTO,
+    status_code=status.HTTP_201_CREATED,
+)
 async def register_user(data: RegisterUserSchema, request: Request):
     user = await UserDAO.find_one_by_filters(email=data.email)
 
     if user:
-        return JSONResponse({"message": "User already exists"}, 401)
+        return MessageResponseDTO(
+            message="User already exists", status_code=status.HTTP_401_UNAUTHORIZED
+        )
 
     # client_ip = request.client.host  Если не на локальном сервере
 
@@ -35,7 +43,9 @@ async def register_user(data: RegisterUserSchema, request: Request):
     timezone = get_timezone_by_ip(client_ip)
 
     if not timezone:
-        return JSONResponse({"message": "Timezone not found"}, 401)
+        return MessageResponseDTO(
+            message="Timezone not found", status_code=status.HTTP_401_UNAUTHORIZED
+        )
 
     user = Users(
         name=data.name,
@@ -48,18 +58,24 @@ async def register_user(data: RegisterUserSchema, request: Request):
 
     await UserDAO.add_one(user)
 
-    return JSONResponse({"message": "User created"}, 201)
+    return MessageResponseDTO(
+        message="User created", status_code=status.HTTP_201_CREATED
+    )
 
 
-@router.post("/login", summary="Вход пользователя")
+@router.post("/login", summary="Вход пользователя", response_model=AuthResponseDTO)
 async def login_user(data: LoginSchema):
     user = await UserDAO.find_one_by_filters(email=data.email)
 
     if not user:
-        return JSONResponse({"message": "User not found"}, 401)
+        return MessageResponseDTO(
+            message="User not found", status_code=status.HTTP_401_UNAUTHORIZED
+        )
 
     if not check_password(data.password, user.password_hash):
-        return JSONResponse({"message": "Wrong password"}, 401)
+        return MessageResponseDTO(
+            message="Wrong password", status_code=status.HTTP_401_UNAUTHORIZED
+        )
 
     token = create_access_token(
         data={"sub": "hotel", "user_id": user.id, "email": user.email}
@@ -69,14 +85,12 @@ async def login_user(data: LoginSchema):
         data={"sub": "hotel", "user_id": user.id, "email": user.email}
     )
 
-    return {
-        "access_token": token,
-        "refresh_token": refresh_token,
-        "token_type": "Bearer",
-    }
+    return AuthResponseDTO(
+        access_token=token, refresh_token=refresh_token, token_type="Bearer"
+    )
 
 
-@router.post("/refresh", summary="Обновление токена")
+@router.post("/refresh", summary="Обновление токена", response_model=AuthResponseDTO)
 async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
 
@@ -87,15 +101,21 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         type = payload["type"]
     except Exception as e:
         print(e)
-        return JSONResponse({"status": "Invalid token"}, 401)
+        return MessageResponseDTO(
+            message="Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
+        )
 
     user = await UserDAO.find_one_by_filters(id=user_id, email=email)
 
     if type != "refresh":
-        return JSONResponse({"status": "You token is not refresh"}, 401)
+        return MessageResponseDTO(
+            message="You token is not refresh", status_code=status.HTTP_401_UNAUTHORIZED
+        )
 
     if not user:
-        return JSONResponse({"status": "User not authorized"}, 404)
+        return MessageResponseDTO(
+            message="User not authorized", status_code=status.HTTP_404_NOT_FOUND
+        )
 
     token = create_access_token(
         data={"sub": "hotel", "user_id": user.id, "email": user.email}
@@ -105,8 +125,6 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         data={"sub": "hotel", "user_id": user.id, "number": user.email}
     )
 
-    return {
-        "access_token": token,
-        "refresh_token": refresh_token,
-        "token_type": "Bearer",
-    }
+    return AuthResponseDTO(
+        access_token=token, refresh_token=refresh_token, token_type="Bearer"
+    )
