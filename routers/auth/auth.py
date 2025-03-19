@@ -77,13 +77,9 @@ async def login_user(data: LoginSchema):
             message="Wrong password", status_code=status.HTTP_401_UNAUTHORIZED
         )
 
-    token = create_access_token(
-        data={"sub": "hotel", "user_id": user.id, "email": user.email}
-    )
+    token = create_access_token(data={"sub": "hotel", "user_id": user.id})
 
-    refresh_token = create_refresh_token(
-        data={"sub": "hotel", "user_id": user.id, "email": user.email}
-    )
+    refresh_token = create_refresh_token(data={"sub": "hotel", "user_id": user.id})
 
     return AuthResponseDTO(
         access_token=token, refresh_token=refresh_token, token_type="Bearer"
@@ -97,7 +93,6 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(secu
     try:
         payload = decode_token(token)
         user_id = payload["user_id"]
-        email = payload["email"]
         type = payload["type"]
     except Exception as e:
         print(e)
@@ -105,7 +100,7 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(secu
             message="Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
         )
 
-    user = await UserDAO.find_one_by_filters(id=user_id, email=email)
+    user = await UserDAO.find_one_by_filters(id=user_id)
 
     if type != "refresh":
         return MessageResponseDTO(
@@ -117,13 +112,9 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(secu
             message="User not authorized", status_code=status.HTTP_404_NOT_FOUND
         )
 
-    token = create_access_token(
-        data={"sub": "hotel", "user_id": user.id, "email": user.email}
-    )
+    token = create_access_token(data={"sub": "hotel", "user_id": user.id})
 
-    refresh_token = create_refresh_token(
-        data={"sub": "hotel", "user_id": user.id, "number": user.email}
-    )
+    refresh_token = create_refresh_token(data={"sub": "hotel", "user_id": user.id})
 
     return AuthResponseDTO(
         access_token=token, refresh_token=refresh_token, token_type="Bearer"
