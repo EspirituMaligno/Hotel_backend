@@ -21,12 +21,11 @@ async def get_current_user(
 
     try:
         user_id = payload["user_id"]
-        email = payload["email"]
         expire = payload["exp"]
     except:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    user = await UserDAO.find_one_by_filters(id=user_id, email=email)
+    user = await UserDAO.find_one_by_filters(id=user_id)
 
     if not expire:
         raise HTTPException(status_code=401, detail="Token expired")
