@@ -21,7 +21,7 @@ router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
 
 @router.get(
-    "/free/list",
+    "/list",
     summary="Получить список свободных номеров с паггинацией и фильтрами",
     response_model=List[RoomResponseDTO],
 )
@@ -32,29 +32,6 @@ async def get_list_rooms(
         start_date=data.start_date,
         end_date=data.end_date,
         count_of_people=data.count_of_people,
-        limit=data.limit,
-        offset=data.offset,
-        price_from=data.price_from,
-        price_to=data.price_to,
-        rating=data.rating,
-        is_pc=data.is_pc,
-        is_wifi=data.is_wifi,
-        is_breakfast=data.is_breakfast,
-        is_biometry_key=data.is_biometry_key,
-        is_noisecancelling=data.is_noisecancelling,
-        is_tv=data.is_tv,
-    )
-
-
-@router.get(
-    "/list/all",
-    summary="Получить список номеров с паггинацией и фильтрами",
-    response_model=List[RoomResponseDTO],
-)
-async def get_list_all_rooms(
-    data: GetListAllRoomsSchema = Query(...), user: Users = Depends(get_current_user)
-):
-    return await RoomDAO.find_all_rooms(
         limit=data.limit,
         offset=data.offset,
         price_from=data.price_from,
@@ -85,7 +62,9 @@ async def get_busy_dates(
 
 
 @router.get(
-    "/one", summary="Получить один номер по room_id", response_model=RoomResponseDTO
+    "/one",
+    summary="Получить один номер по room_id",
+    response_model=RoomResponseDTO,
 )
 async def get_one_room(
     room_id: int = Query(...), user: Users = Depends(get_current_user)

@@ -5,8 +5,8 @@ from pydantic import BaseModel
 class GetListRoomsSchema(BaseModel):
     limit: int | None = None
     offset: int | None = None
-    start_date: date
-    end_date: date
+    start_date: date | None = None
+    end_date: date | None = None
     count_of_people: int
     price_from: float | None = None
     price_to: float | None = None

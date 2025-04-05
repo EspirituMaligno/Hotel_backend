@@ -49,62 +49,73 @@ class RoomDAO(BaseDAO):
         is_biometry_key: bool | None = None,
         is_tv: bool | None = None,
     ):
-        # Подзапрос для поиска забронированных номеров
-        subquery = (
-            select(Reservation.room_id)
-            .where(
-                and_(
-                    Reservation.start_date <= end_date,
-                    Reservation.end_date >= start_date,
+        try:
+            # Инициализируем базовый запрос с загрузкой изображений
+            query = select(cls.model).options(selectinload(cls.model.images))
+
+            # Добавляем фильтр по датам, если они указаны
+            if start_date is not None or end_date is not None:
+                subquery = (
+                    select(Reservation.room_id)
+                    .where(
+                        and_(
+                            Reservation.start_date <= end_date,
+                            Reservation.end_date >= start_date,
+                        )
+                    )
+                    .distinct()
                 )
-            )
-            .distinct()
-        )
+                query = query.where(not_(cls.model.id.in_(subquery)))
 
-        # Основной запрос: исключаем номера, которые есть в подзапросе
-        query = select(cls.model).where(not_(cls.model.id.in_(subquery)))
+            # Добавляем остальные фильтры
+            if count_of_people is not None:
+                query = query.where(cls.model.count_of_people >= count_of_people)
+            if price_from is not None and price_to is not None:
+                query = query.where(cls.model.price.between(price_from, price_to))
+            elif price_from is not None:
+                query = query.where(cls.model.price >= price_from)
+            elif price_to is not None:
+                query = query.where(cls.model.price <= price_to)
 
-        if count_of_people is not None:
-            query = query.where(cls.model.count_of_people >= count_of_people)
-        # Добавляем фильтры
-        if price_from is not None and price_to is not None:
-            query = query.where(cls.model.price.between(price_from, price_to))
-        elif price_from is not None:
-            query = query.where(cls.model.price >= price_from)
-        elif price_to is not None:
-            query = query.where(cls.model.price <= price_to)
+            if rating is not None:
+                query = query.where(cls.model.rating == rating)
 
-        if rating is not None:
-            query = query.where(cls.model.rating == rating)
+            if is_pc is not None:
+                query = query.where(cls.model.is_pc == is_pc)
 
-        if is_pc is not None:
-            query = query.where(cls.model.is_pc == is_pc)
+            if is_noisecancelling is not None:
+                query = query.where(cls.model.is_noisecancelling == is_noisecancelling)
 
-        if is_noisecancelling is not None:
-            query = query.where(cls.model.is_noisecancelling == is_noisecancelling)
+            if is_wifi is not None:
+                query = query.where(cls.model.is_wifi == is_wifi)
 
-        if is_wifi is not None:
-            query = query.where(cls.model.is_wifi == is_wifi)
+            if is_breakfast is not None:
+                query = query.where(cls.model.is_breakfast == is_breakfast)
 
-        if is_breakfast is not None:
-            query = query.where(cls.model.is_breakfast == is_breakfast)
+            if is_biometry_key is not None:
+                query = query.where(cls.model.is_biometry_key == is_biometry_key)
 
-        if is_biometry_key is not None:
-            query = query.where(cls.model.is_biometry_key == is_biometry_key)
+            if is_tv is not None:
+                query = query.where(cls.model.is_tv == is_tv)
 
-        if is_tv is not None:
-            query = query.where(cls.model.is_tv == is_tv)
+            # Применяем пагинацию
+            if limit:
+                query = query.limit(limit)
+            if offset:
+                query = query.offset(offset)
 
-        # Применяем пагинацию
-        if limit:
-            query = query.limit(limit)
-        if offset:
-            query = query.offset(offset)
+            logger.debug(f"Executing query: {query}")
 
-        async with async_session() as session:
-            result = await session.execute(query)
+            async with async_session() as session:
+                result = await session.execute(query)
+                rooms = result.scalars().all()
+                logger.debug(f"Found {len(rooms)} rooms")
+                return rooms
 
-        return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Error in find_available_rooms: {str(e)}", exc_info=True)
+            # Возвращаем пустой список в случае ошибки
+            return []
 
     @classmethod
     async def find_all_rooms(
