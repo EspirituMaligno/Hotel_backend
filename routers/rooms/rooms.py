@@ -11,6 +11,7 @@ from routers.rooms.schemas import (
 )
 from typing import List
 from routers.rooms.DTO import (
+    RoomInfoResponseDTO,
     RoomResponseDTO,
     BusyDatesResponseDTO,
     ReservationResponseDTO,
@@ -81,7 +82,23 @@ async def book_room(
     room = await RoomDAO.find_one_by_filters(id=data.room_id)
 
     if not room:
-        return ReservationStatusResponseDTO(status="error", message="Room not found")
+        return ReservationStatusResponseDTO(status="error", message="Номер не найден")
+
+    if room.count_of_people < data.count_of_people:
+        return ReservationStatusResponseDTO(
+            status="error", message="Количество людей в номере меньше указанного"
+        )
+
+    existing_reservations = await ReservationDAO.find_all(room_id=data.room_id)
+
+    for existing_reservation in existing_reservations:
+        if (
+            data.start_date <= existing_reservation.end_date
+            and data.end_date >= existing_reservation.start_date
+        ):
+            return ReservationStatusResponseDTO(
+                status="error", message="Номер уже забронирован на указанные даты"
+            )
 
     difference_date = data.end_date - data.start_date
     count_nights = difference_date.days - 1
@@ -98,7 +115,9 @@ async def book_room(
 
     await RoomDAO.add_one(new_book)
 
-    return ReservationStatusResponseDTO(status="success", message="Room was reserved")
+    return ReservationStatusResponseDTO(
+        status="success", message="Номер успешно забронирован"
+    )
 
 
 @router.put(
@@ -122,9 +141,23 @@ async def update_reservation(
             status="error", message="У вас нет прав на редактирование этой брони"
         )
 
-    room = await RoomDAO.find_one_by_filters(id=data.room_id)
+    room = await RoomDAO.find_one_by_filters(id=reservation.room_id)
     if not room:
         return ReservationStatusResponseDTO(status="error", message="Номер не найден")
+
+    existing_reservations = await ReservationDAO.find_all(room_id=reservation.room_id)
+
+    for existing_reservation in existing_reservations:
+        if existing_reservation.id == data.reservation_id:
+            continue
+
+        if (
+            data.start_date <= existing_reservation.end_date
+            and data.end_date >= existing_reservation.start_date
+        ):
+            return ReservationStatusResponseDTO(
+                status="error", message="Номер уже забронирован на указанные даты"
+            )
 
     difference_date = data.end_date - data.start_date
     count_nights = difference_date.days - 1
@@ -159,17 +192,26 @@ async def get_reservations(
     result = []
     for r in reservations:
         room = await RoomDAO.find_one_by_filters(id=r.room_id)
-        result.append(
-            ReservationResponseDTO(
-                id=r.id,
-                user_id=r.user_id,
-                room=room,
-                start_date=r.start_date,
-                end_date=r.end_date,
-                count_nights=r.count_nights,
-                price=r.price,
+        if room:
+            result.append(
+                ReservationResponseDTO(
+                    id=r.id,
+                    user_id=r.user_id,
+                    room=RoomInfoResponseDTO(
+                        id=room.id,
+                        preview=room.preview,
+                        description=room.description,
+                        room_count=room.room_count,
+                        count_of_people=room.count_of_people,
+                        price=room.price,
+                        rating=room.rating,
+                    ),
+                    start_date=r.start_date,
+                    end_date=r.end_date,
+                    count_nights=r.count_nights,
+                    price=r.price,
+                )
             )
-        )
 
     return result
 

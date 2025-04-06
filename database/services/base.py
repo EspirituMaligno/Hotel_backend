@@ -41,12 +41,15 @@ class BaseDAO:
     async def delete_one(cls, **filter_by):
         query = delete(cls.model).filter_by(**filter_by)
         async with async_session() as session:
-            session.execute(query)
+            await session.execute(query)
             await session.commit()
 
     @classmethod
-    async def update_one(cls, **filter_by):
-        query = update(cls.model).filter_by(**filter_by)
+    async def update_one(cls, **kwargs):
+        filter_by = {k: v for k, v in kwargs.items() if k == "id"}
+        values = {k: v for k, v in kwargs.items() if k != "id"}
+
+        query = update(cls.model).filter_by(**filter_by).values(**values)
         async with async_session() as session:
-            session.execute(query)
+            await session.execute(query)
             await session.commit()

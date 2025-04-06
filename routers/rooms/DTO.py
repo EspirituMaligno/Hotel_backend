@@ -24,10 +24,20 @@ class BusyDatesResponseDTO(BaseModel):
     end_date: date
 
 
+class RoomInfoResponseDTO(BaseModel):
+    id: int
+    preview: Optional[str]
+    description: Optional[str]
+    room_count: int
+    count_of_people: Optional[int]
+    price: float
+    rating: Optional[int]
+
+
 class ReservationResponseDTO(BaseModel):
     id: int
     user_id: int
-    room: RoomResponseDTO
+    room: RoomInfoResponseDTO
     start_date: date
     end_date: date
     count_nights: int
