@@ -41,18 +41,6 @@ class Rooms(Base):
     is_biometry_key: Mapped[bool] = mapped_column(nullable=True)
     is_tv: Mapped[bool] = mapped_column(nullable=True)
 
-    images = relationship("RoomsImages", lazy="subquery")
-
-
-class RoomsImages(Base):
-    __tablename__ = "rooms_images"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id"))
-    image: Mapped[str] = mapped_column(nullable=False)
-
-    room = relationship("Rooms")
-
 
 class Reservation(Base):
     __tablename__ = "reservation"

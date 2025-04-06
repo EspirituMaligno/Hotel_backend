@@ -51,7 +51,7 @@ class RoomDAO(BaseDAO):
     ):
         try:
             # Инициализируем базовый запрос с загрузкой изображений
-            query = select(cls.model).options(selectinload(cls.model.images))
+            query = select(cls.model)
 
             # Добавляем фильтр по датам, если они указаны
             if start_date is not None or end_date is not None:
