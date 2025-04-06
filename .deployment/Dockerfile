@@ -31,7 +31,7 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 RUN echo '#!/bin/sh\n\
-until pg_isready -h db -U ${POSTGRES_USER}; do\n\
+until pg_isready -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do\n\
   echo "Waiting for PostgreSQL..."\n\
   sleep 2\n\
 done\n\
@@ -41,6 +41,7 @@ exec "$@"\n\
     chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
 
 # EXPOSE 80
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
