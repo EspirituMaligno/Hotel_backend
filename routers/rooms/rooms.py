@@ -101,6 +101,48 @@ async def book_room(
     return ReservationStatusResponseDTO(status="success", message="Room was reserved")
 
 
+@router.put(
+    "/",
+    summary="Редактировать бронирование",
+    response_model=ReservationStatusResponseDTO,
+)
+async def update_reservation(
+    data: ReservationRoomSchema,
+    user: Users = Depends(get_current_user),
+):
+    reservation = await ReservationDAO.find_one_by_filters(id=data.reservation_id)
+
+    if not reservation:
+        return ReservationStatusResponseDTO(
+            status="error", message="Бронирование не найдено"
+        )
+
+    if reservation.user_id != user.id:
+        return ReservationStatusResponseDTO(
+            status="error", message="У вас нет прав на редактирование этой брони"
+        )
+
+    room = await RoomDAO.find_one_by_filters(id=data.room_id)
+    if not room:
+        return ReservationStatusResponseDTO(status="error", message="Номер не найден")
+
+    difference_date = data.end_date - data.start_date
+    count_nights = difference_date.days - 1
+    price = room.price * count_nights
+
+    await ReservationDAO.update_one(
+        id=data.reservation_id,
+        start_date=data.start_date,
+        end_date=data.end_date,
+        count_nights=count_nights,
+        price=price,
+    )
+
+    return ReservationStatusResponseDTO(
+        status="success", message="Бронирование успешно обновлено"
+    )
+
+
 @router.get(
     "/reservations",
     summary="История бронирований",

@@ -1,7 +1,7 @@
 from zoneinfo import ZoneInfo
 from database.models import Users
 from database.services.dao import UserDAO
-from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from routers.auth.schemas import LoginSchema, RecoveryPasswordSchema, RegisterUserSchema
@@ -96,24 +96,23 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         type = payload["type"]
     except Exception as e:
         print(e)
-        return MessageResponseDTO(
-            message="Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
 
     user = await UserDAO.find_one_by_filters(id=user_id)
 
     if type != "refresh":
-        return MessageResponseDTO(
-            message="You token is not refresh", status_code=status.HTTP_401_UNAUTHORIZED
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="You token is not refresh"
         )
 
     if not user:
-        return MessageResponseDTO(
-            message="User not authorized", status_code=status.HTTP_404_NOT_FOUND
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not authorized"
         )
 
     token = create_access_token(data={"sub": "hotel", "user_id": user.id})
-
     refresh_token = create_refresh_token(data={"sub": "hotel", "user_id": user.id})
 
     return AuthResponseDTO(
