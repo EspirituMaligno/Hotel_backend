@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import main_router
 
 app = FastAPI(title="Dream hotel", docs_url="/docs")
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 origins = ["*"]
 app.add_middleware(
