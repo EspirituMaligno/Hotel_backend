@@ -31,10 +31,17 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 RUN echo '#!/bin/sh\n\
-until pg_isready -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do\n\
+export POSTGRES_USER=${POSTGRES_USER:-postgres}\n\
+export POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n\
+export POSTGRES_DB=${POSTGRES_DB:-hotel_test}\n\
+export POSTGRES_HOST=${POSTGRES_HOST:-db}\n\
+export POSTGRES_PORT=${POSTGRES_PORT:-5432}\n\
+\n\
+until pg_isready -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB; do\n\
   echo "Waiting for PostgreSQL..."\n\
   sleep 2\n\
 done\n\
+\n\
 python init_db.py\n\
 exec "$@"\n\
 ' > /entrypoint.sh && \
