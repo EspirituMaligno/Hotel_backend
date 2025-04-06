@@ -7,7 +7,7 @@ class GetListRoomsSchema(BaseModel):
     offset: int | None = None
     start_date: date | None = None
     end_date: date | None = None
-    count_of_people: int
+    count_of_people: int | None = None
     price_from: float | None = None
     price_to: float | None = None
     rating: int | None = None

@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 class RoomResponseDTO(BaseModel):
     id: int
-    images: List[str]
     preview: Optional[str]
     description: Optional[str]
     room_count: int
