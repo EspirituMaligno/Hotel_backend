@@ -42,7 +42,6 @@ services:
     volumes:
       - ../:/app
     working_dir: /app
-    command: sh -c "sleep 5 && python init_db.py && uvicorn main:app --host 0.0.0.0 --port 5000 --reload"
     env_file:
       - ../.env
 
