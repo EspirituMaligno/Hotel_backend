@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from fastapi.responses import JSONResponse
 from pytz import timezone
 
@@ -75,7 +75,7 @@ async def get_list_reviews(
                     user_id=us.id,
                     name=us.name,
                 ),
-                room=RoomInfoDTO(room_id=room.id),
+                room_id=room.id,
                 text=review.text,
                 rating=review.rating,
                 created_at=created_at,
@@ -94,8 +94,8 @@ async def get_one_review(
     review = await ReviewDAO.find_one_by_filters(id=review_id)
 
     if not review:
-        return MessageResponseDTO(
-            message="Review not found", status_code=status.HTTP_404_NOT_FOUND
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Отзыв не найден"
         )
 
     us = await UserDAO.find_one_by_filters(id=review.user_id)

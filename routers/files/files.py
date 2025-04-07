@@ -38,5 +38,5 @@ async def upload_image(file: UploadFile = File(...)):
     return MessageResponseDTO(
         message="Изображение успешно загружено",
         status_code=200,
-        data={"url": f"http://localhost:5000/static/images/{file_name}"},
+        data={"url": f"https://vlad.ayarayarovich.ru/static/images/{file_name}"},
     )

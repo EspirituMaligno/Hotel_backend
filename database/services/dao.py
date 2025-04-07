@@ -78,7 +78,7 @@ class RoomDAO(BaseDAO):
                 query = query.where(cls.model.price <= price_to)
 
             if rating is not None:
-                query = query.where(cls.model.rating == rating)
+                query = query.where(cls.model.rating >= rating)
 
             if is_pc is not None:
                 query = query.where(cls.model.is_pc == is_pc)

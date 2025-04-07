@@ -15,7 +15,7 @@ class RoomInfoDTO(BaseModel):
 class ReviewResponseDTO(BaseModel):
     review_id: int
     user: UserInfoDTO
-    room: RoomInfoDTO
+    room_id: int
     text: str
     rating: int
     created_at: datetime

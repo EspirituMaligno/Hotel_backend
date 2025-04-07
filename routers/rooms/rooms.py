@@ -1,9 +1,10 @@
 from database.models import Reservation, Users
 from database.services.dao import ReservationDAO, RoomDAO, UserDAO
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from fastapi.responses import JSONResponse
 from routers.dependencies import get_current_user
 from routers.rooms.schemas import (
+    EditReservationSchema,
     GetListAllRoomsSchema,
     GetListRoomsSchema,
     GetReservationsHistorySchema,
@@ -74,7 +75,9 @@ async def get_one_room(
 
 
 @router.post(
-    "/", summary="Забронировать номер", response_model=ReservationStatusResponseDTO
+    "/reservations",
+    summary="Забронировать номер",
+    response_model=ReservationStatusResponseDTO,
 )
 async def book_room(
     data: ReservationRoomSchema, user: Users = Depends(get_current_user)
@@ -82,11 +85,14 @@ async def book_room(
     room = await RoomDAO.find_one_by_filters(id=data.room_id)
 
     if not room:
-        return ReservationStatusResponseDTO(status="error", message="Номер не найден")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Номер не найден"
+        )
 
     if room.count_of_people < data.count_of_people:
-        return ReservationStatusResponseDTO(
-            status="error", message="Количество людей в номере меньше указанного"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Количество людей в номере меньше указанного",
         )
 
     existing_reservations = await ReservationDAO.find_all(room_id=data.room_id)
@@ -96,8 +102,9 @@ async def book_room(
             data.start_date <= existing_reservation.end_date
             and data.end_date >= existing_reservation.start_date
         ):
-            return ReservationStatusResponseDTO(
-                status="error", message="Номер уже забронирован на указанные даты"
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Номер уже забронирован на указанные даты",
             )
 
     difference_date = data.end_date - data.start_date
@@ -121,29 +128,34 @@ async def book_room(
 
 
 @router.put(
-    "/",
+    "/reservations",
     summary="Редактировать бронирование",
     response_model=ReservationStatusResponseDTO,
 )
 async def update_reservation(
-    data: ReservationRoomSchema,
+    data: EditReservationSchema,
     user: Users = Depends(get_current_user),
 ):
     reservation = await ReservationDAO.find_one_by_filters(id=data.reservation_id)
 
     if not reservation:
-        return ReservationStatusResponseDTO(
-            status="error", message="Бронирование не найдено"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Бронирование не найдено",
         )
 
     if reservation.user_id != user.id:
-        return ReservationStatusResponseDTO(
-            status="error", message="У вас нет прав на редактирование этой брони"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="У вас нет прав на редактирование этой брони",
         )
 
     room = await RoomDAO.find_one_by_filters(id=reservation.room_id)
     if not room:
-        return ReservationStatusResponseDTO(status="error", message="Номер не найден")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Номер не найден",
+        )
 
     existing_reservations = await ReservationDAO.find_all(room_id=reservation.room_id)
 
@@ -155,8 +167,9 @@ async def update_reservation(
             data.start_date <= existing_reservation.end_date
             and data.end_date >= existing_reservation.start_date
         ):
-            return ReservationStatusResponseDTO(
-                status="error", message="Номер уже забронирован на указанные даты"
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Номер уже забронирован на указанные даты",
             )
 
     difference_date = data.end_date - data.start_date
@@ -200,6 +213,7 @@ async def get_reservations(
                     room=RoomInfoResponseDTO(
                         id=room.id,
                         preview=room.preview,
+                        name=room.name,
                         description=room.description,
                         room_count=room.room_count,
                         count_of_people=room.count_of_people,
@@ -217,7 +231,7 @@ async def get_reservations(
 
 
 @router.delete(
-    "/",
+    "/reservations",
     summary="Удалить бронирование(Со стороны пользователя, отмена брони)",
     response_model=ReservationStatusResponseDTO,
 )

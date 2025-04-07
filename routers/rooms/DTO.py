@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class RoomResponseDTO(BaseModel):
     id: int
     preview: Optional[str]
+    name: Optional[str]
     description: Optional[str]
     room_count: int
     count_of_people: Optional[int]
@@ -27,6 +28,7 @@ class BusyDatesResponseDTO(BaseModel):
 class RoomInfoResponseDTO(BaseModel):
     id: int
     preview: Optional[str]
+    name: Optional[str]
     description: Optional[str]
     room_count: int
     count_of_people: Optional[int]

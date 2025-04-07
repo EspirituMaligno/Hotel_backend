@@ -34,6 +34,13 @@ class GetListAllRoomsSchema(BaseModel):
 
 
 class ReservationRoomSchema(BaseModel):
+    room_id: int
+    count_of_people: int
+    start_date: date
+    end_date: date
+
+
+class EditReservationSchema(BaseModel):
     reservation_id: int
     count_of_people: int
     start_date: date

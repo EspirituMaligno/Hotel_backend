@@ -12,7 +12,7 @@ from routers.user.DTO import UserResponseDTO
 router = APIRouter(prefix="/user", tags=["User"])
 
 
-@router.get("/", summary="Получить юзера", response_model=UserResponseDTO)
+@router.get("", summary="Получить юзера", response_model=UserResponseDTO)
 async def get_all_users(user: Users = Depends(get_current_user)):
     # user = await UserDAO.find_one_by_filters(id=user.id)
 

@@ -29,6 +29,7 @@ class Rooms(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     preview: Mapped[str] = mapped_column(nullable=True)
+    name: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
     room_count: Mapped[int] = mapped_column(nullable=False)
     count_of_people: Mapped[int] = mapped_column(nullable=True)
